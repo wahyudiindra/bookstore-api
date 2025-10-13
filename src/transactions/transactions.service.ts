@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma, Role, TransactionStatus } from '@prisma/client';
+import { Prisma, Role, Transaction, TransactionStatus } from '@prisma/client';
 import { BaseRepository } from 'src/common/base-repository';
 import { PrismaService } from 'src/common/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { PayloadOfUser } from 'src/auth/strategies/jwt.strategy';
 import { FindTransactionsDto } from './dto/find-transactions.dto';
+import { FindTransactionDto } from './dto/find-transaction.dto';
 
 @Injectable()
 export class TransactionsService extends BaseRepository {
@@ -14,13 +15,20 @@ export class TransactionsService extends BaseRepository {
 
     findTransactions(query: FindTransactionsDto, user: PayloadOfUser) {
         const filter: Prisma.TransactionWhereInput = { ...(user.role === Role.CUSTOMER && { userId: user.id }) };
-        const include: Prisma.TransactionInclude = {
-            user: !!query.includeUser,
-            ...(!!query.includeItems && {
-                items: { include: { book: { select: { title: true, author: true, description: true } } } },
-            }),
-        };
+        const include = this.constructInclude(query);
+
         return super.findAll({ ...query, filter, include });
+    }
+
+    async findTransaction(id: string, query: FindTransactionDto, user: PayloadOfUser) {
+        const include = this.constructInclude(query);
+
+        const transaction: Transaction = await super.findOne(id, { include });
+        if (user.role === Role.CUSTOMER && transaction.userId !== user.id) {
+            throw new BadRequestException(`You don't have access`);
+        }
+
+        return transaction;
     }
 
     async createTransaction({ cartIds }: CreateTransactionDto, user: PayloadOfUser) {
@@ -59,5 +67,14 @@ export class TransactionsService extends BaseRepository {
                 },
             });
         });
+    }
+
+    constructInclude(query: FindTransactionsDto): Prisma.TransactionInclude {
+        return {
+            user: !!query.includeUser,
+            ...(!!query.includeItems && {
+                items: { include: { book: { select: { title: true, author: true, description: true } } } },
+            }),
+        };
     }
 }
