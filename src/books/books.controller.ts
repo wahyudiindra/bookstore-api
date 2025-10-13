@@ -24,6 +24,12 @@ export class BooksController {
         return this.booksService.findBook(id, req.user);
     }
 
+    @Get(':id/report')
+    @Roles([Role.ADMIN])
+    findReport(@Param('id') id: string) {
+        return this.booksService.findReport(id);
+    }
+
     @Post()
     @Roles([Role.ADMIN])
     create(@Body() data: CreateBookDto) {

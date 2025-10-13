@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { Book, Prisma, Role } from '@prisma/client';
+import { Book, Prisma, Role, TransactionStatus } from '@prisma/client';
 import { BaseRepository } from 'src/common/base-repository';
 import { PrismaService } from 'src/common/prisma.service';
 import { FindBooksDto } from './dto/find-books.dto';
@@ -7,7 +7,7 @@ import { PayloadOfUser } from 'src/auth/strategies/jwt.strategy';
 
 @Injectable()
 export class BooksService extends BaseRepository {
-    constructor(prisma: PrismaService) {
+    constructor(private prisma: PrismaService) {
         super(prisma, Prisma.ModelName.Book);
     }
 
@@ -26,5 +26,26 @@ export class BooksService extends BaseRepository {
         }
 
         return book;
+    }
+
+    async findReport(id: string) {
+        const book: Book = await super.findOne(id, {});
+        let totalSold = 0,
+            totalRevenue = 0;
+
+        const items = await this.prisma.transactionItem.findMany({
+            where: { bookId: id, transaction: { status: TransactionStatus.SUCCESS } },
+        });
+
+        items.forEach((item) => {
+            totalSold += item.quantity;
+            totalRevenue += item.quantity * Number(item.price);
+        });
+
+        return {
+            totalSold,
+            totalRevenue,
+            remainingStock: book.stock,
+        };
     }
 }
