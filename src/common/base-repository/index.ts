@@ -21,21 +21,17 @@ export class BaseRepository {
     }
 
     async findAll(query: PaginationQueryDto): Promise<PaginationResponseType> {
-        try {
-            const { skip, take, orderBy, include, select, where } = PaginationUtils.transform(query);
-            const total = await this.resource.count({ where });
-            const data = await this.resource.findMany({
-                skip,
-                take,
-                where,
-                orderBy,
-                ...(isNotEmptyObject(select) ? { select } : { ...(isNotEmptyObject(include) && { include }) }),
-            });
+        const { skip, take, orderBy, include, select, where } = PaginationUtils.transform(query);
+        const total = await this.resource.count({ where });
+        const data = await this.resource.findMany({
+            skip,
+            take,
+            where,
+            orderBy,
+            ...(isNotEmptyObject(select) ? { select } : { ...(isNotEmptyObject(include) && { include }) }),
+        });
 
-            return { total, data };
-        } catch (err) {
-            throw new BadRequestException(err.message);
-        }
+        return { total, data };
     }
 
     async findOne(id: string | number, query?: FindOneDto) {

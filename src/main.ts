@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { ExceptionsFilter } from './common/filters/exceptions.filter';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -9,6 +10,7 @@ async function bootstrap() {
     app.useGlobalPipes(
         new ValidationPipe({ whitelist: true, transform: true, transformOptions: { enableImplicitConversion: true } }),
     );
+    app.useGlobalFilters(new ExceptionsFilter());
 
     const options = new DocumentBuilder()
         .setTitle('Bookstore API')
