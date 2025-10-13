@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma, Role } from '@prisma/client';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { Book, Prisma, Role } from '@prisma/client';
 import { BaseRepository } from 'src/common/base-repository';
 import { PrismaService } from 'src/common/prisma.service';
 import { FindBooksDto } from './dto/find-books.dto';
@@ -14,5 +14,16 @@ export class BooksService extends BaseRepository {
     findBooks(query: FindBooksDto, { role }: PayloadOfUser) {
         const filter: Prisma.BookWhereInput = { ...(role === Role.CUSTOMER && { stock: { gt: 0 }, isActive: true }) };
         return super.findAll({ ...query, filter });
+    }
+
+    async findBook(id: string, { role }: PayloadOfUser) {
+        // TODO: need set include transaction or chart
+
+        const book: Book = await super.findOne(id, {});
+        if (role === Role.CUSTOMER && (!book.isActive || !book.stock)) {
+            throw new BadRequestException(`You don't have access`);
+        }
+
+        return book;
     }
 }
