@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, Query, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, Request } from '@nestjs/common';
 import { CartsService } from './carts.service';
 import { Role } from '@prisma/client';
 import { Authorize, Roles } from 'src/auth/decorators/auth.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateCartDto } from './dto/create-cart.dto';
 import { FindCartsDto } from './dto/find-carts.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
 
 @Authorize()
 @ApiBearerAuth()
@@ -23,5 +24,11 @@ export class CartsController {
     @Roles([Role.CUSTOMER])
     create(@Body() data: CreateCartDto, @Request() req) {
         return this.cartsService.createCart(data, req.user);
+    }
+
+    @Put(':id')
+    @Roles([Role.CUSTOMER])
+    update(@Param('id') id: string, @Body() data: UpdateCartDto, @Request() req) {
+        return this.cartsService.updateCart(id, data, req.user);
     }
 }
