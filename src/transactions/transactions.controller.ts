@@ -7,6 +7,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { FindTransactionsDto } from './dto/find-transactions.dto';
 import { FindTransactionDto } from './dto/find-transaction.dto';
 import { CallbackTransactionDto } from './dto/callback-transaction.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Authorize()
 @ApiBearerAuth()
@@ -32,6 +33,7 @@ export class TransactionsController {
     }
 
     @Public()
+    @SkipThrottle()
     @Post('callback')
     async callback(@Body() data: CallbackTransactionDto) {
         return this.transactionsService.callback(data);
