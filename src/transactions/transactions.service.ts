@@ -6,6 +6,7 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { PayloadOfUser } from 'src/auth/strategies/jwt.strategy';
 import { FindTransactionsDto } from './dto/find-transactions.dto';
 import { FindTransactionDto } from './dto/find-transaction.dto';
+import { CallbackTransactionDto } from './dto/callback-transaction.dto';
 
 @Injectable()
 export class TransactionsService extends BaseRepository {
@@ -66,6 +67,24 @@ export class TransactionsService extends BaseRepository {
                     status: TransactionStatus.PENDING,
                 },
             });
+        });
+    }
+
+    async callback(callbackData: CallbackTransactionDto) {
+        if (!['settlement', 'expire', 'fail'].includes(callbackData.status)) return;
+
+        const transaction = await this.prisma.transaction.findFirst({
+            where: { id: callbackData?.transactionId, status: TransactionStatus.PENDING },
+        });
+        if (!transaction) return;
+
+        return this.prisma.transaction.update({
+            where: { id: callbackData.transactionId },
+            data: {
+                paymentRefId: callbackData.id,
+                paymentRef: { ...callbackData },
+                status: callbackData.status === 'settlement' ? TransactionStatus.SUCCESS : TransactionStatus.FAILED,
+            },
         });
     }
 

@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Param, Post, Query, Request } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
-import { Authorize, Roles } from 'src/auth/decorators/auth.decorator';
+import { Authorize, Public, Roles } from 'src/auth/decorators/auth.decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { FindTransactionsDto } from './dto/find-transactions.dto';
 import { FindTransactionDto } from './dto/find-transaction.dto';
+import { CallbackTransactionDto } from './dto/callback-transaction.dto';
 
 @Authorize()
 @ApiBearerAuth()
@@ -28,5 +29,11 @@ export class TransactionsController {
     @Roles([Role.CUSTOMER])
     create(@Body() data: CreateTransactionDto, @Request() req) {
         return this.transactionsService.createTransaction(data, req.user);
+    }
+
+    @Public()
+    @Post('callback')
+    async callback(@Body() data: CallbackTransactionDto) {
+        return this.transactionsService.callback(data);
     }
 }
