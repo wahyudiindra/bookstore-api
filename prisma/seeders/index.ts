@@ -1,10 +1,12 @@
 import { Prisma } from './prisma.utils';
-import user from './user.seeder';
+import User from './user.seeder';
+import Book from './book.seeder';
 
 async function main() {
     console.log('\n-> START::SEEDING');
 
-    await user.run(10);
+    await User.run(10);
+    await Book.run(25);
 
     console.log('-> FINISH::SEEDING\n');
 }
