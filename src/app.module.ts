@@ -6,9 +6,17 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
 import { CartsModule } from './carts/carts.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
-    imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, BooksModule, CartsModule, UsersModule],
+    imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
+        AuthModule,
+        BooksModule,
+        CartsModule,
+        TransactionsModule,
+        UsersModule,
+    ],
     controllers: [AppController],
     providers: [AppService],
 })
