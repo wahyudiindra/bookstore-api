@@ -1,9 +1,12 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpStatus, HttpException } from '@nestjs/common';
-import { isNumber, isObject } from 'class-validator';
+import { isObject } from 'class-validator';
+import { PrismaService } from '../prisma.service';
 
 @Catch()
 export class ExceptionsFilter implements ExceptionFilter {
-    catch(exception: any, host: ArgumentsHost) {
+    constructor(private prisma: PrismaService) {}
+
+    async catch(exception: any, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse();
         const request = ctx.getRequest();
@@ -16,10 +19,15 @@ export class ExceptionsFilter implements ExceptionFilter {
 
             response.status(statusCode).json({ statusCode, message });
         } else {
-            console.error(`[Error......]`, exception);
+            await this.prisma.errorLog.create({
+                data: {
+                    message: (exception as any)?.message || 'An unexpected error occurred',
+                    stack: exception instanceof Error ? exception.stack : null,
+                    endpoint: request.url,
+                },
+            });
             response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-                message: 'Internal Server Error',
                 ...(process.env.NODE_ENV !== 'production' && {
                     error: (exception as any)?.message || 'An unexpected error occurred',
                     timestamp: new Date().toISOString(),

@@ -7,9 +7,13 @@ import { UsersModule } from './users/users.module';
 import { BooksModule } from './books/books.module';
 import { CartsModule } from './carts/carts.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { APP_FILTER } from '@nestjs/core';
+import { ExceptionsFilter } from './common/filters/exceptions.filter';
+import { CommonModule } from './common/common.module';
 
 @Module({
     imports: [
+        CommonModule,
         ConfigModule.forRoot({ isGlobal: true }),
         AuthModule,
         BooksModule,
@@ -18,6 +22,6 @@ import { TransactionsModule } from './transactions/transactions.module';
         UsersModule,
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService, { provide: APP_FILTER, useClass: ExceptionsFilter }],
 })
 export class AppModule {}

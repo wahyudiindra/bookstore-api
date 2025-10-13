@@ -84,6 +84,17 @@ model TransactionItem {
   @@map("transaction_items")
 }
 
+model ErrorLog {
+  id        String   @id @default(cuid())
+  message   String
+  stack     String?
+  userId    String?
+  endpoint  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("error_logs")
+}
+
 enum Role {
   CUSTOMER
   ADMIN
