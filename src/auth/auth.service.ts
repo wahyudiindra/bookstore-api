@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/common/prisma.service';
 import * as bcrypt from 'bcrypt';
+import * as dayjs from 'dayjs';
 
 @Injectable()
 export class AuthService {
@@ -23,6 +24,17 @@ export class AuthService {
 
     async signIn(user: User) {
         const { id, email, name, role } = user;
-        return { accessToken: this.jwtService.sign({ id, email, name, role }), user };
+        const accessToken = this.jwtService.sign({ id, email, name, role });
+
+        await this.prisma.session.updateMany({ where: { userId: id }, data: { isActive: false } });
+        await this.prisma.session.create({
+            data: {
+                userId: id,
+                accessToken,
+                isActive: true,
+                expiredAt: dayjs(this.jwtService.decode(accessToken).exp * 1000).toDate(),
+            },
+        });
+        return { accessToken, user };
     }
 }

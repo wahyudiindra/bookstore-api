@@ -23,6 +23,7 @@ model User {
   updatedAt    DateTime      @updatedAt @map("updated_at")
   carts        Cart[]
   transactions Transaction[]
+  sessions     Session[]
 
   @@map("users")
 }
@@ -93,6 +94,19 @@ model ErrorLog {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("error_logs")
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String   @map("user_id")
+  accessToken String   @unique @map("access_token")
+  isActive    Boolean  @map("is_active")
+  expiredAt   DateTime @map("expired_at")
+  deviceInfo  String?  @map("device_info")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("sessions")
 }
 
 enum Role {
