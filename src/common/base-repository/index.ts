@@ -50,7 +50,7 @@ export class BaseRepository {
 
     async create(data: any) {
         try {
-            return this.resource.create({ data });
+            return await this.resource.create({ data });
         } catch (err) {
             throw new BadRequestException(
                 err.code === 'P2002'
@@ -64,7 +64,7 @@ export class BaseRepository {
         await this.findOne(id);
 
         try {
-            return this.resource.update({ where: { id }, data });
+            return await this.resource.update({ where: { id }, data });
         } catch (err) {
             throw new BadRequestException(
                 err.code === 'P2002'

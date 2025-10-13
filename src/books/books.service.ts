@@ -17,11 +17,12 @@ export class BooksService extends BaseRepository {
     }
 
     async findBook(id: string, { role }: PayloadOfUser) {
-        // TODO: need set include transaction or chart
+        // TODO: need set include transaction or cart
 
         const book: Book = await super.findOne(id, {});
-        if (role === Role.CUSTOMER && (!book.isActive || !book.stock)) {
-            throw new BadRequestException(`You don't have access`);
+        if (role === Role.CUSTOMER) {
+            if (!book.isActive) throw new BadRequestException(`You don't have access`);
+            else if (!book.stock) throw new BadRequestException(`Stock is empty`);
         }
 
         return book;
