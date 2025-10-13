@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Post, Query, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Request } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Authorize, Roles } from 'src/auth/decorators/auth.decorator';
 import { FindBooksDto } from './dto/find-books.dto';
 import { Role } from '@prisma/client';
 import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @Authorize()
 @ApiBearerAuth()
@@ -27,5 +28,11 @@ export class BooksController {
     @Roles([Role.ADMIN])
     create(@Body() data: CreateBookDto) {
         return this.booksService.create(data);
+    }
+
+    @Patch(':id')
+    @Roles([Role.ADMIN])
+    update(@Param('id') id: string, @Body() data: UpdateBookDto) {
+        return this.booksService.update(id, data);
     }
 }
