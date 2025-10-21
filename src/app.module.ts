@@ -12,12 +12,26 @@ import { ExceptionsFilter } from './common/filters/exceptions.filter';
 import { CommonModule } from './common/common.module';
 import { ThrottleLimit } from './common/throttle.config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { CacheModule } from '@nestjs/cache-manager';
+import KeyvRedis, { Keyv } from '@keyv/redis';
+import { CacheableMemory } from 'cacheable';
 
 @Module({
     imports: [
         CommonModule,
         ConfigModule.forRoot({ isGlobal: true }),
         ThrottlerModule.forRoot({ throttlers: [ThrottleLimit.MEDIUM.default] }),
+        CacheModule.registerAsync({
+            isGlobal: true,
+            useFactory: async () => {
+                return {
+                    stores: [
+                        new Keyv({ store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }) }),
+                        new KeyvRedis(`redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`),
+                    ],
+                };
+            },
+        }),
         AuthModule,
         BooksModule,
         CartsModule,
