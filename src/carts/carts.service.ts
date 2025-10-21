@@ -24,7 +24,7 @@ export class CartsService extends BaseRepository {
     }
 
     async createCart({ qty, bookId }: CreateCartDto, user: PayloadOfUser) {
-        const book = await this.booksService.findBook(bookId, user);
+        const book = await this.booksService.findBook(bookId, {}, user);
         if (book.stock < qty) throw new BadRequestException('The requested quantity exceeds the available stock');
 
         const newBook: Prisma.CartUncheckedCreateInput = { qty, bookId, userId: user.id };

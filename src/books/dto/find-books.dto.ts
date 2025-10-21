@@ -1,7 +1,7 @@
 import { ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
 import { FindManyDto } from 'src/common/base-repository/dto/find-many.dto';
 import { JOINER, PaginationUtils } from 'src/common/base-repository/pagination.utils';
 
@@ -26,4 +26,16 @@ export class FindBooksDto extends OmitType(FindManyDto, ['include', 'searchBy', 
         description: `Can only be a combination of fields: ${searchBy.join(', ')}`,
     })
     searchBy?: string[];
+
+    @IsBoolean()
+    @IsOptional()
+    @ApiPropertyOptional({ enum: ['true', 'false'] })
+    @Transform(({ value }) => ['true', '1', true, 1].includes(value))
+    includeCarts?: string;
+
+    @IsBoolean()
+    @IsOptional()
+    @ApiPropertyOptional({ enum: ['true', 'false'] })
+    @Transform(({ value }) => ['true', '1', true, 1].includes(value))
+    includeTransactions?: string;
 }

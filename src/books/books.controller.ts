@@ -6,6 +6,7 @@ import { FindBooksDto } from './dto/find-books.dto';
 import { Role } from '@prisma/client';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { FindBookDto } from './dto/find-book.dto';
 
 @Authorize()
 @ApiBearerAuth()
@@ -20,14 +21,8 @@ export class BooksController {
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string, @Request() req) {
-        return this.booksService.findBook(id, req.user);
-    }
-
-    @Get(':id/report')
-    @Roles([Role.ADMIN])
-    findReport(@Param('id') id: string) {
-        return this.booksService.findReport(id);
+    findOne(@Param('id') id: string, @Query() query: FindBookDto, @Request() req) {
+        return this.booksService.findBook(id, query, req.user);
     }
 
     @Post()

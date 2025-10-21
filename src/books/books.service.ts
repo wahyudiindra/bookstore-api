@@ -2,8 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Book, Prisma, Role, TransactionStatus } from '@prisma/client';
 import { BaseRepository } from 'src/common/base-repository';
 import { PrismaService } from 'src/common/prisma.service';
-import { FindBooksDto } from './dto/find-books.dto';
 import { PayloadOfUser } from 'src/auth/strategies/jwt.strategy';
+import { FindBooksDto } from './dto/find-books.dto';
+import { FindBookDto } from './dto/find-book.dto';
 
 @Injectable()
 export class BooksService extends BaseRepository {
@@ -11,16 +12,18 @@ export class BooksService extends BaseRepository {
         super(prisma, Prisma.ModelName.Book);
     }
 
-    findBooks(query: FindBooksDto, { role }: PayloadOfUser) {
-        const filter: Prisma.BookWhereInput = { ...(role === Role.CUSTOMER && { stock: { gt: 0 }, isActive: true }) };
-        return super.findAll({ ...query, filter });
+    findBooks(query: FindBooksDto, user: PayloadOfUser) {
+        const include = this.constructInclude(query, user);
+        const filter: Prisma.BookWhereInput = {
+            ...(user.role === Role.CUSTOMER && { stock: { gt: 0 }, isActive: true }),
+        };
+        return super.findAll({ ...query, filter, include });
     }
 
-    async findBook(id: string, { role }: PayloadOfUser) {
-        // TODO: need set include transaction or cart
-
-        const book: Book = await super.findOne(id, {});
-        if (role === Role.CUSTOMER) {
+    async findBook(id: string, query: FindBookDto, user: PayloadOfUser): Promise<Book> {
+        const include = this.constructInclude(query, user);
+        const book: Book = await super.findOne(id, { include });
+        if (user.role === Role.CUSTOMER) {
             if (!book.isActive) throw new BadRequestException(`You don't have access`);
             else if (!book.stock) throw new BadRequestException(`Stock is empty`);
         }
@@ -28,24 +31,12 @@ export class BooksService extends BaseRepository {
         return book;
     }
 
-    async findReport(id: string) {
-        const book: Book = await super.findOne(id, {});
-        let totalSold = 0,
-            totalRevenue = 0;
-
-        const items = await this.prisma.transactionItem.findMany({
-            where: { bookId: id, transaction: { status: TransactionStatus.SUCCESS } },
-        });
-
-        items.forEach((item) => {
-            totalSold += item.quantity;
-            totalRevenue += item.quantity * Number(item.price);
-        });
+    constructInclude(query: FindBooksDto, user: PayloadOfUser): Prisma.BookInclude {
+        if (user.role === Role.ADMIN) return {};
 
         return {
-            totalSold,
-            totalRevenue,
-            remainingStock: book.stock,
+            ...(!!query.includeCarts && { carts: { where: { userId: user.id } } }),
+            ...(!!query.includeTransactions && { transactionItems: { where: { transaction: { userId: user.id } } } }),
         };
     }
 }
