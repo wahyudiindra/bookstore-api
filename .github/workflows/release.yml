@@ -1,0 +1,43 @@
+name: CI/CD Release
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch:
+
+permissions:
+    contents: write # ⬅️ agar bisa push tag/commit
+    packages: write # ⬅️ agar bisa push Docker image
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # supaya tag lama terbaca
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: yarn
+
+            - run: yarn install --frozen-lockfile
+            - run: yarn test --passWithNoTests
+
+            # ---- Auto version bump & changelog ----
+            - name: Configure git
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            - name: Bump version & generate changelog
+              run: yarn release:patch
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Push new tag
+              run: git push --follow-tags origin main

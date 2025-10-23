@@ -23,7 +23,11 @@
         "db:generate": "npx prisma generate",
         "db:migrate": "npx prisma migrate dev",
         "db:reset": "npx prisma migrate reset",
-        "db:seed": "ts-node prisma/seeders/index.ts"
+        "db:seed": "ts-node prisma/seeders/index.ts",
+        "release:patch": "standard-version --release-as patch",
+        "release:minor": "standard-version --release-as minor",
+        "release:major": "standard-version --release-as major",
+        "postrelease": "git push --follow-tags origin main"
     },
     "dependencies": {
         "@keyv/redis": "^5.1.3",
@@ -71,6 +75,7 @@
         "prettier": "^3.4.2",
         "prisma": "^6.17.1",
         "source-map-support": "^0.5.21",
+        "standard-version": "^9.5.0",
         "supertest": "^7.0.0",
         "ts-jest": "^29.2.5",
         "ts-loader": "^9.5.2",
