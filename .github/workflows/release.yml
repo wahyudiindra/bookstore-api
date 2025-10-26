@@ -1,0 +1,61 @@
+name: Manual Release (standard-version)
+
+on:
+    workflow_dispatch:
+        inputs:
+            release-type:
+                description: 'Select the release type'
+                required: true
+                default: 'patch'
+                type: choice
+                options:
+                    - Patch
+                    - Minor
+                    - Major
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: 'yarn'
+
+            - name: Install dependencies
+              run: yarn install --frozen-lockfile
+
+            - name: Configure Git identity
+              run: |
+                  git config --global user.name "github-actions[bot]"
+                  git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+            - name: Run standard-version
+              run: |
+                  yarn standard-version --release-as ${{ github.event.inputs.release-type }}
+                  version=$(node -p "require('./package.json').version")
+                  echo "version=$version" >> $GITHUB_ENV
+
+            - name: Push changes and tags
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  git push origin HEAD:main --follow-tags
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: v${{ env.version }}
+                  name: 🚀 Release v${{ env.version }}
+                  body_path: CHANGELOG.md
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
